@@ -1,0 +1,27 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu Checkout Et
+        uses: actions/checkout@v2
+
+      - name: Kubernetes Manifests Doğrulama
+        uses: instrumenta/kubeval-action@v1
+        with:
+          files: manifests/*.yaml
+
+      - name: Kubernetes'e Uygula
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.K8S_HOST }}
+          username: ${{ secrets.K8S_USER }}
+          key: ${{ secrets.K8S_KEY }}
+          script: |
+            kubectl apply -f manifests/

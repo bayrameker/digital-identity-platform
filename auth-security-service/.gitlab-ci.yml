@@ -1,0 +1,21 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - go build -o main cmd/main.go
+    - docker build -t your_docker_registry/auth-security-service:$CI_COMMIT_SHA .
+    - docker push your_docker_registry/auth-security-service:$CI_COMMIT_SHA
+
+test:
+  stage: test
+  script:
+    - go test ./...
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl set image deployment/auth-security-service auth-security-service=your_docker_registry/auth-security-service:$CI_COMMIT_SHA

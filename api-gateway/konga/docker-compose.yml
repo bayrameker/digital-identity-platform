@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  kong-database:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    volumes:
+      - kong-db-data:/var/lib/postgresql/data
+
+  kong-migration:
+    image: kong:2.5
+    command: kong migrations bootstrap
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+    depends_on:
+      - kong-database
+
+  kong:
+    image: kong:2.5
+    restart: always
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001, 0.0.0.0:8444 ssl'
+      KONG_LOG_LEVEL: info
+    ports:
+      - '8000:8000'   # Proxy portu
+      - '8443:8443'   # Proxy SSL portu
+      - '8001:8001'   # Admin API portu
+      - '8444:8444'   # Admin API SSL portu
+    volumes:
+      - ./kong/kong.conf:/etc/kong/kong.conf
+      - ./kong/certs/:/etc/kong/certs/
+    depends_on:
+      - kong-database
+      - kong-migration
+
+volumes:
+  kong-db-data:

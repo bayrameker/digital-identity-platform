@@ -1,0 +1,14 @@
+package utils
+
+import (
+    "github.com/gin-gonic/gin"
+    "net/http"
+)
+
+func RespondWithError(c *gin.Context, code int, message string) {
+    c.JSON(code, gin.H{"error": message})
+}
+
+func RespondWithJSON(c *gin.Context, code int, payload interface{}) {
+    c.JSON(code, payload)
+}
